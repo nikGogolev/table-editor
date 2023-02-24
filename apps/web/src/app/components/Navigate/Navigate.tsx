@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 import styles from './navigate.module.scss';
 
@@ -9,7 +9,7 @@ interface NavPropsType {
 
 export const Navigate = ({ allowNav }: NavPropsType) => {
   return (
-    <>
+    <div>
       {allowNav && (
         <div className={styles['navigate-container']}>
           <NavLink
@@ -50,6 +50,6 @@ export const Navigate = ({ allowNav }: NavPropsType) => {
           </NavLink>
         </div>
       )}
-    </>
+    </div>
   );
 };

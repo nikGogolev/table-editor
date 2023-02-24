@@ -1,19 +1,21 @@
 import React from 'react';
-import { Employes } from '../../../features/employesTable/employesTableSlice';
-import { Grades } from '../../../features/gradesTable/gradesTableSlice';
-import { Positions } from '../../../features/positionsTable/positionsTableSlice';
+import { EditCellPayload } from '../../app';
 import { TableRow } from './TableRow';
-
-type TableData = Grades | Positions | Employes;
 
 export const Table = ({
   tableData,
   allowEdit,
   tableHeader,
+  editAction,
+  changeAction,
+  clickAction,
 }: {
-  tableData: Array<TableData>;
+  tableData: object[];
   allowEdit: boolean;
   tableHeader: string[];
+  editAction?: (payload: EditCellPayload) => Promise<string>;
+  changeAction?: () => void;
+  clickAction?: (payload: number) => void;
 }) => {
   return tableData ? (
     <div className="table">
@@ -25,6 +27,9 @@ export const Table = ({
           rowData={rowData}
           rowIndex={idx}
           allowEdit={allowEdit}
+          editAction={editAction}
+          changeAction={changeAction}
+          clickAction={clickAction}
         />
       ))}
     </div>

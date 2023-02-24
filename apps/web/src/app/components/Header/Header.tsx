@@ -2,13 +2,13 @@ import {
   activateAddPopup as activateGradesAddPopup,
   getGradesTable,
   getSelectedRow as getGradesSelectedRow,
-  remove as gradesRemove,
+  removeAsync as gradesRemove,
 } from '../../../features/gradesTable/gradesTableSlice';
 import {
   activateAddPopup as activatePositionsAddPopup,
   getPositionsTable,
   getSelectedRow as getPositionsSelectedRow,
-  remove as positionsRemove,
+  removeAsync as positionsRemove,
 } from '../../../features/positionsTable/positionsTableSlice';
 import {
   activateAddPopup as activateEmployesAddPopup,
@@ -41,10 +41,10 @@ export const Header = ({
   useEffect(() => {
     switch (selectedTable) {
       case 'grades':
-        setRemoveBtnActive(gradesTable.length > 0);
+        setRemoveBtnActive(gradesTable.length > 1);
         break;
       case 'positions':
-        setRemoveBtnActive(positionsTable.length > 0);
+        setRemoveBtnActive(positionsTable.length > 1);
         break;
 
       case 'employes':
@@ -71,10 +71,11 @@ export const Header = ({
     }
   };
 
-  const handleDeleteRow = () => {
+  const handleDeleteRow = async () => {
     switch (selectedTable) {
       case 'grades':
-        dispatch(gradesRemove({ oldIndex: selectedRow }));
+        await dispatch(gradesRemove({ oldIndex: selectedRow }));
+        //dispatch(gradesRemove({ oldIndex: selectedRow }));
         break;
       case 'positions':
         dispatch(positionsRemove({ oldIndex: selectedRow }));

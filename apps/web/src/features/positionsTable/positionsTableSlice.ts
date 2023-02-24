@@ -1,8 +1,8 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 
 export interface PositionsTablePayload {
-  new: string;
+  new?: string;
   oldIndex: number;
   id?: number;
 }
@@ -16,6 +16,79 @@ export interface Positions {
   id: number;
   name: string;
 }
+
+export const removeAsync = createAsyncThunk(
+  'positionsTable/removeAsync',
+  async (
+    payload: PositionsTablePayload,
+    { dispatch, rejectWithValue, fulfillWithValue, getState }
+  ) => {
+    try {
+      const state: RootState = getState() as unknown as RootState;
+      if (
+        state.employesTable.table.find(
+          (item) =>
+            item.positionId === state.positionsTable.table[payload.oldIndex].id
+        )
+      ) {
+        dispatch(
+          setError(
+            `Должность "${
+              state.positionsTable.table[payload.oldIndex].name
+            }" используется в таблице сотрудников`
+          )
+        );
+      } else {
+        dispatch(remove(payload));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
+export const editAsync = createAsyncThunk(
+  'positionsTable/editAsync',
+  async (
+    payload: PositionsTablePayload,
+    { dispatch, rejectWithValue, fulfillWithValue, getState }
+  ) => {
+    try {
+      const state: RootState = getState() as unknown as RootState;
+      if (payload.id !== 1) {
+        if (
+          !state.positionsTable.table.find(
+            (item, idx) => item.name === payload.new && idx !== payload.oldIndex
+          )
+        ) {
+          dispatch(edit(payload));
+          return fulfillWithValue(payload.new);
+        } else {
+          dispatch(setError('Такая должность уже существует'));
+          return rejectWithValue(
+            state.positionsTable.table[payload.oldIndex].name
+          );
+        }
+      } else {
+        if (
+          !state.positionsTable.table.find((item) => {
+            return item.name === payload.new;
+          })
+        ) {
+          dispatch(add(payload));
+          return fulfillWithValue(payload.new);
+        } else {
+          dispatch(setError('Такая должность уже существует'));
+          return rejectWithValue(
+            state.positionsTable.table[payload.oldIndex].name
+          );
+        }
+      }
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
 
 export const positionsTableSlice = createSlice({
   name: 'positionsTable',
@@ -34,7 +107,7 @@ export const positionsTableSlice = createSlice({
           return item.name === payload.new;
         })
       ) {
-        state.table.unshift({ id: +new Date(), name: payload.new });
+        state.table.unshift({ id: +new Date(), name: String(payload.new) });
       } else {
         state.error.state = true;
         state.error.message = 'Такая должность уже существует';
@@ -42,34 +115,17 @@ export const positionsTableSlice = createSlice({
     },
     edit: (state, action) => {
       const payload: PositionsTablePayload = action.payload;
-      if (payload.id !== 1) {
-        if (
-          !state.table.find(
-            (item, idx) => item.name === payload.new && idx !== payload.oldIndex
-          )
-        ) {
-          state.table[payload.oldIndex].name = payload.new;
-        } else {
-          state.error.state = true;
-          state.error.message = 'Такая должность уже существует';
-        }
-      } else {
-        if (
-          !state.table.find((item) => {
-            return item.name === payload.new;
-          })
-        ) {
-          state.table.unshift({ id: +new Date(), name: payload.new });
-        } else {
-          state.error.state = true;
-          state.error.message = 'Такая должность уже существует';
-        }
-      }
+
+      state.table[payload.oldIndex].name = String(payload.new);
     },
     remove: (state, action) => {
       const payload: PositionsTablePayload = action.payload;
 
       state.table.splice(payload.oldIndex, 1);
+    },
+    setError: (state, action) => {
+      state.error.state = true;
+      state.error.message = action.payload;
     },
     resetError: (state) => {
       state.error.state = false;
@@ -92,6 +148,7 @@ export const {
   add,
   edit,
   remove,
+  setError,
   resetError,
   activateAddPopup,
   deactivateAddPopup,

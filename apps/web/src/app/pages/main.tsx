@@ -5,11 +5,21 @@ import {
   getAddPopupState,
   getError,
   getEmployesTable,
+  resetError as resetEmployesError,
+  editAsync,
+  resetError,
 } from '../../features/employesTable/employesTableSlice';
-import { getGradesTable } from '../../features/gradesTable/gradesTableSlice';
-import { getPositionsTable } from '../../features/positionsTable/positionsTableSlice';
+import {
+  getGradesTable,
+  resetError as resetGradesError,
+} from '../../features/gradesTable/gradesTableSlice';
+import {
+  getPositionsTable,
+  resetError as resetPositionsError,
+} from '../../features/positionsTable/positionsTableSlice';
 import {
   getSelectedRow,
+  setSelectedRow,
   setSelectedTable,
 } from '../../features/table/tableSlice';
 import MyPopup from '../components/my-popup/my-popup';
@@ -19,6 +29,7 @@ import { useAppDispatch, useAppSelector } from '../hooks';
 import { GradesPage } from './grades';
 import { PositionsPage } from './positions';
 import styles from './main.module.scss';
+import { EditCellPayload } from '../app';
 
 interface MainPagePropsType {
   allowEdit: boolean;
@@ -59,6 +70,32 @@ export const MainPage = ({ allowEdit, allowNav }: MainPagePropsType) => {
       dispatch(deactivateAddPopup());
     }
   };
+
+  const cellEditAction = async (payload: EditCellPayload): Promise<string> => {
+    const result = await dispatch(
+      editAsync({ new: payload.new, oldIndex: payload.oldIndex })
+    );
+    return result.payload as string;
+  };
+
+  const cellChangeAction = () => {
+    dispatch(resetError());
+  };
+
+  const cellClickAction = (payload: number) => {
+    dispatch(setSelectedRow(payload));
+  };
+
+  useEffect(() => {
+    checkAddEmployeButtonEnabled();
+  }, [addPopupState]);
+
+  useEffect(() => {
+    dispatch(resetGradesError());
+    dispatch(resetPositionsError());
+    dispatch(resetEmployesError());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setGradeDefaultValue = () => {
     const grade: HTMLSelectElement =
@@ -116,6 +153,9 @@ export const MainPage = ({ allowEdit, allowNav }: MainPagePropsType) => {
         tableData={mapData}
         allowEdit={allowEdit}
         tableHeader={['', 'ФИО', 'Образование', 'Должность']}
+        editAction={cellEditAction}
+        changeAction={cellChangeAction}
+        clickAction={cellClickAction}
       />
       {addPopupState && (
         <MyPopup

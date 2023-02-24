@@ -1,22 +1,30 @@
 import React from 'react';
-import { Employes } from '../../../features/employesTable/employesTableSlice';
-import { Grades } from '../../../features/gradesTable/gradesTableSlice';
-import { Positions } from '../../../features/positionsTable/positionsTableSlice';
 import { TableCell } from './TableCell';
 import styles from './table.module.scss';
-
-type RowData = Grades | Positions | Employes | string[];
+import { EditCellPayload } from '../../app';
 
 export const TableRow = ({
   rowData,
   rowIndex,
   allowEdit,
+  editAction,
+  changeAction,
+  clickAction,
 }: {
-  rowData: RowData;
+  rowData: object | string[];
   rowIndex: number;
   allowEdit: boolean;
+  editAction?: (payload: EditCellPayload) => Promise<string>;
+  changeAction?: () => void;
+  clickAction?: (payload: number) => void;
 }) => {
-  const mapData = Object.values(rowData);
+  let mapData = new Array<string>();
+  if (typeof rowData === 'object') {
+    mapData = Object.values(rowData);
+  }
+  if (Array.isArray(rowData)) {
+    mapData = rowData;
+  }
 
   return (
     <div className={styles['table__row']}>
@@ -28,7 +36,10 @@ export const TableRow = ({
               item={item}
               index={rowIndex}
               allowEdit={allowEdit}
-              id={mapData[0]}
+              id={+mapData[0]}
+              editAction={editAction}
+              changeAction={changeAction}
+              clickAction={clickAction}
             />
           )) ||
           (idx > 1 && (
@@ -37,7 +48,7 @@ export const TableRow = ({
               item={item}
               index={rowIndex}
               allowEdit={false}
-              id={mapData[0]}
+              id={+mapData[0]}
             />
           ))
       )}

@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 
 export interface EmployesTablePayload {
@@ -22,6 +22,34 @@ export interface Employes {
   gradeId: number;
   positionId: number;
 }
+
+export const editAsync = createAsyncThunk(
+  'employesTable/editAsync',
+  async (
+    payload: EmployesTableEditPayload,
+    { dispatch, rejectWithValue, fulfillWithValue, getState }
+  ) => {
+    try {
+      const state: RootState = getState() as unknown as RootState;
+
+      if (
+        !state.employesTable.table.find(
+          (item, idx) => item.name === payload.new && idx !== payload.oldIndex
+        )
+      ) {
+        dispatch(edit(payload));
+        return fulfillWithValue(payload.new);
+      } else {
+        dispatch(setError('Такой сотрудник уже существует'));
+        return rejectWithValue(
+          state.employesTable.table[payload.oldIndex].name
+        );
+      }
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
 
 export const employesTableSlice = createSlice({
   name: 'employesTable',
@@ -69,6 +97,10 @@ export const employesTableSlice = createSlice({
 
       state.table.splice(payload.oldIndex, 1);
     },
+    setError: (state, action) => {
+      state.error.state = true;
+      state.error.message = action.payload;
+    },
     resetError: (state) => {
       state.error.state = false;
       state.error.message = '';
@@ -90,6 +122,7 @@ export const {
   add,
   edit,
   remove,
+  setError,
   resetError,
   activateAddPopup,
   deactivateAddPopup,

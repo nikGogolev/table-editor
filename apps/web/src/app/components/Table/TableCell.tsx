@@ -1,99 +1,53 @@
-import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../hooks';
-import {
-  edit as gradesEdit,
-  getError as getGradesError,
-  getGradesTable,
-  Grades,
-  resetError as resetGradesError,
-} from '../../../features/gradesTable/gradesTableSlice';
-import {
-  edit as positionsEdit,
-  getError as getPositionsError,
-  getPositionsTable,
-  Positions,
-  resetError as resetPositionsError,
-} from '../../../features/positionsTable/positionsTableSlice';
-import {
-  edit as employesEdit,
-  getError as getEmployesError,
-  getEmployesTable,
-  Employes,
-  resetError as resetEmployesError,
-} from '../../../features/employesTable/employesTableSlice';
-import {
-  getSelectedTable,
-  setSelectedRow,
-} from '../../../features/table/tableSlice';
+import React, { useState } from 'react';
+
+import { EditCellPayload } from '../../app';
 
 export const TableCell = ({
   item,
   index,
   allowEdit,
   id,
+  editAction,
+  changeAction,
+  clickAction,
 }: {
   item: string;
   index: number;
   allowEdit: boolean;
   id: number;
+  editAction?: (payload: EditCellPayload) => Promise<string>;
+  changeAction?: () => void;
+  clickAction?: (payload: number) => void;
 }) => {
-  const dispatch = useAppDispatch();
-  const gradesError = useAppSelector(getGradesError);
-  const gradesActVal = useAppSelector(getGradesTable);
-  const positionsError = useAppSelector(getPositionsError);
-  const positionsActVal = useAppSelector(getPositionsTable);
-  const employesError = useAppSelector(getEmployesError);
-  const employesActVal = useAppSelector(getEmployesTable);
   const [state, setState] = useState(item);
-  const selectedtable = useAppSelector(getSelectedTable);
-
-  type CellData = Grades;
-
-  useEffect(() => {
-    if (gradesError.state) {
-      setState(gradesActVal[index]?.name);
-    }
-
-    if (positionsError.state) {
-      setState(positionsActVal[index]?.name);
-    }
-
-    if (employesError.state) {
-      setState(employesActVal[index]?.name);
-    }
-  }, [gradesError, positionsError, employesError, state]);
 
   const handleClick = () => {
-    dispatch(setSelectedRow(index));
-  };
-
-  const handleEdit = () => {
-    switch (selectedtable) {
-      case 'grades':
-        dispatch(gradesEdit({ new: state, oldIndex: index, id }));
-        break;
-      case 'positions':
-        dispatch(positionsEdit({ new: state, oldIndex: index, id }));
-        break;
-
-      case 'employes':
-        dispatch(employesEdit({ new: state, oldIndex: index, id }));
-        break;
-      default:
-        break;
+    if (clickAction instanceof Function) {
+      clickAction(index);
     }
   };
+
+  const handleEdit = async () => {
+    if (editAction instanceof Function) {
+      const result = await editAction({ new: state, oldIndex: index, id });
+      setState(result);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (changeAction instanceof Function) {
+      changeAction();
+    }
+    setState(e.target.value);
+  };
+
   return (
     <div className="table__cell">
       <input
         disabled={!allowEdit}
         value={state}
         onClick={handleClick}
-        onChange={({ target }) => {
-          dispatch(resetGradesError());
-          dispatch(resetPositionsError());
-          setState(target.value);
-        }}
+        onChange={handleChange}
         type="text"
         onKeyDown={(e) => {
           if (e.key === 'Enter') {

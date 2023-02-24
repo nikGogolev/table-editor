@@ -5,6 +5,7 @@ import positionsTableReducer from '../features/positionsTable/positionsTableSlic
 import tableReducer from '../features/table/tableSlice';
 import employesTableReducer from '../features/employesTable/employesTableSlice';
 enableMapSet();
+
 export const store = configureStore({
   reducer: {
     gradesTable: gradesTableReducer,

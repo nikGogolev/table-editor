@@ -5,14 +5,22 @@ import {
   getAddPopupState,
   getError,
   getPositionsTable,
+  resetError as resetPositionsError,
+  editAsync,
   resetError,
 } from '../../features/positionsTable/positionsTableSlice';
-import { setSelectedTable } from '../../features/table/tableSlice';
+import { resetError as resetGradesError } from '../../features/gradesTable/gradesTableSlice';
+import { resetError as resetEmployesError } from '../../features/employesTable/employesTableSlice';
+import {
+  setSelectedRow,
+  setSelectedTable,
+} from '../../features/table/tableSlice';
 import MyPopup from '../components/my-popup/my-popup';
 import { Navigate } from '../components/Navigate/Navigate';
 import { Table } from '../components/Table/Table';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import styles from './positions.module.scss';
+import { EditCellPayload } from '../app';
 
 interface PositionsPagePropsType {
   allowEdit: boolean;
@@ -49,6 +57,26 @@ export const PositionsPage = ({
     }
   };
 
+  const cellEditAction = async (payload: EditCellPayload): Promise<string> => {
+    const result = await dispatch(
+      editAsync({
+        new: payload.new,
+        oldIndex: payload.oldIndex,
+        id: payload.id,
+      })
+    );
+
+    return result.payload as string;
+  };
+
+  const cellChangeAction = () => {
+    dispatch(resetError());
+  };
+
+  const cellClickAction = (payload: number) => {
+    dispatch(setSelectedRow(payload));
+  };
+
   const mapData = useMemo(
     () => (hideSpareRow ? positionsTable.slice(0, -1) : positionsTable),
     [hideSpareRow, positionsTable]
@@ -56,6 +84,13 @@ export const PositionsPage = ({
 
   useEffect(() => {
     dispatch(setSelectedTable('positions'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionsTable]);
+
+  useEffect(() => {
+    dispatch(resetGradesError());
+    dispatch(resetPositionsError());
+    dispatch(resetEmployesError());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -67,6 +102,9 @@ export const PositionsPage = ({
         tableData={mapData}
         allowEdit={allowEdit}
         tableHeader={['', 'Должность']}
+        editAction={cellEditAction}
+        changeAction={cellChangeAction}
+        clickAction={cellClickAction}
       />
       {addPopupState && (
         <MyPopup
@@ -83,7 +121,7 @@ export const PositionsPage = ({
             type="text"
             ref={ref}
             onInput={() => {
-              dispatch(resetError());
+              dispatch(resetPositionsError());
               checkAddButtonEnabled();
             }}
           />

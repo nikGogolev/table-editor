@@ -2,17 +2,25 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   add,
   deactivateAddPopup,
+  editAsync,
   getAddPopupState,
   getError,
   getGradesTable,
   resetError,
+  resetError as resetGradesError,
 } from '../../features/gradesTable/gradesTableSlice';
-import { setSelectedTable } from '../../features/table/tableSlice';
+import { resetError as resetPositionsError } from '../../features/positionsTable/positionsTableSlice';
+import { resetError as resetEmployesError } from '../../features/employesTable/employesTableSlice';
+import {
+  setSelectedRow,
+  setSelectedTable,
+} from '../../features/table/tableSlice';
 import MyPopup from '../components/my-popup/my-popup';
 import { Navigate } from '../components/Navigate/Navigate';
 import { Table } from '../components/Table/Table';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import styles from './grades.module.scss';
+import { EditCellPayload } from '../app';
 
 interface GradesPagePropsType {
   allowEdit: boolean;
@@ -50,10 +58,36 @@ export const GradesPage = ({
     }
   };
 
+  const cellEditAction = async (payload: EditCellPayload): Promise<string> => {
+    const result = await dispatch(
+      editAsync({
+        new: payload.new,
+        oldIndex: payload.oldIndex,
+        id: payload.id,
+      })
+    );
+    return result.payload as string;
+  };
+
+  const cellChangeAction = () => {
+    dispatch(resetError());
+  };
+
+  const cellClickAction = (payload: number) => {
+    dispatch(setSelectedRow(payload));
+  };
+
   useEffect(() => {
     dispatch(setSelectedTable('grades'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gradesTable]);
+
+  useEffect(() => {
+    dispatch(resetGradesError());
+    dispatch(resetPositionsError());
+    dispatch(resetEmployesError());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const mapData = useMemo(
     () => (hideSpareRow ? gradesTable.slice(0, -1) : gradesTable),
@@ -68,6 +102,9 @@ export const GradesPage = ({
         tableData={mapData}
         allowEdit={allowEdit}
         tableHeader={['', 'Образование']}
+        editAction={cellEditAction}
+        changeAction={cellChangeAction}
+        clickAction={cellClickAction}
       />
       {addPopupState && (
         <MyPopup
@@ -84,7 +121,7 @@ export const GradesPage = ({
             type="text"
             ref={ref}
             onInput={() => {
-              dispatch(resetError());
+              dispatch(resetGradesError());
               checkAddButtonEnabled();
             }}
           />
